@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>R.I.P. Frontend: 999‑IQ Tribute</title>
+<style>
+html, body {
+  margin: 0;
+  overflow: hidden;
+  height: 100%;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  background: black;
+}
+
+body {
+  background: radial-gradient(circle at center, #0f2027, #2c5364, #ff512f, #dd2476);
+  background-size: 400% 400%;
+  animation: bgmove 18s ease-in-out infinite alternate;
+  position: relative;
+}
+
+@keyframes bgmove {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
+#particle-canvas, #vortex-canvas {
+  position: fixed;
+  left: 0; top: 0;
+  width: 100vw; height: 100vh;
+  pointer-events: none;
+}
+
+#vortex-canvas {
+  z-index: 0;
+  mix-blend-mode: screen;
+  opacity: 0.6;
+}
+
+#particle-canvas {
+  z-index: 2;
+  opacity: 0.85;
+}
+
+.memorial {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 4rem;
+  font-weight: bold;
+  letter-spacing: .09em;
+  text-align: center;
+  filter: drop-shadow(0 0 30px #0008);
+  z-index: 3;
+  animation: glitch 1.5s infinite linear alternate;
+  perspective: 700px;
+}
+
+@keyframes glitch {
+  0% { text-shadow: 2px 0 #ff00c8, -2px 0 #3020ff, 0 0 10px #fff; }
+  20% { text-shadow: -2px 0 #0affe6, 2px 0 #ff8330, 0 0 15px #fff; }
+  40% { text-shadow: 4px 0 #edff00, -1px 2px #ff00c8, 0 0 18px #fff; }
+  60% { text-shadow: -2px 2px #0affe6, 2px -2px #ff8330, 0 0 12px #fff;}
+  80% { text-shadow: 1px 2px #edff00, 3px -1px #ff00c8, 0 0 16px #fff;}
+  100% { text-shadow: 2px 0 #ff00c8, -2px 0 #3020ff, 0 0 10px #fff; }
+}
+
+.subtitle {
+  font-size: 2rem;
+  color: #fff9;
+  letter-spacing: .08em;
+  margin-top: 1.5rem;
+  opacity: 0.82;
+  font-weight: 430;
+  text-shadow: 0 4px 16px #000a, 0 0 6px #f34c9e44;
+  animation: subtitleFade 3s 1.2s both cubic-bezier(0.6,0,0.3,1);
+}
+
+@keyframes subtitleFade {
+  from {opacity: 0;}
+  to {opacity: 0.82;}
+}
+
+.subliminal {
+  position: absolute;
+  color: rgba(255,255,255,0.08);
+  font-size: 2rem;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 1;
+  animation: subliminalFade 6s linear infinite;
+}
+
+@keyframes subliminalFade {
+  0%,100% {opacity: 0;}
+  20%,80% {opacity: 0.08;}
+}
+  
+#lens {
+  position: fixed;
+  top: 0; left: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  backdrop-filter: blur(12px) contrast(1.8) brightness(1.3);
+  pointer-events: none;
+  z-index: 50;
+  mix-blend-mode: screen;
+  transition: transform 0.05s linear;
+}
+
+@media (max-width: 700px) {
+  .memorial { font-size: 2.2rem; }
+  .subtitle { font-size: 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="vortex-canvas"></canvas>
+<canvas id="particle-canvas"></canvas>
+<div class="memorial" id="memorial">
+  R.I.P. Frontend
+  <div class="subtitle">
+    We shipped our last hot reload.<br>
+    <span style="color:#ff33bb;">Forever in spa(c/e)s…</span>
+  </div>
+</div>
+<div id="lens"></div>
+
+<script>
+///////////
+const pcanvas = document.getElementById('particle-canvas');
+const pctx = pcanvas.getContext('2d');
+let W = innerWidth, H = innerHeight;
+pcanvas.width = W; pcanvas.height = H;
+addEventListener('resize', ()=>{W=innerWidth;H=innerHeight;pcanvas.width=W;pcanvas.height=H;});
+
+const particles = Array.from({length: 85}, ()=>({
+  x: Math.random()*W, y: Math.random()*H,
+  vx:(Math.random()-0.5)*1.4, vy:(Math.random()-0.5)*1.4,
+  r: Math.random()*1.8+1.2,
+  color:`hsla(${Math.random()*360},80%,60%,0.73)`
+}));
+
+function drawParticles() {
+  pctx.clearRect(0,0,W,H);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>W) p.vx*=-1;
+    if(p.y<0||p.y>H) p.vy*=-1;
+    pctx.beginPath();
+    pctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    pctx.fillStyle=p.color;
+    pctx.shadowColor=p.color;
+    pctx.shadowBlur=10;
+    pctx.globalAlpha = 0.7+0.3*Math.sin(performance.now()/250-p.x/58);
+    pctx.fill();
+    pctx.globalAlpha=1; pctx.shadowBlur=0;
+  });
+  ////////////////////
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const a=particles[i], b=particles[j];
+      const d=Math.hypot(a.x-b.x,a.y-b.y);
+      if(d<110){
+        pctx.beginPath();
+        pctx.moveTo(a.x,a.y);
+        pctx.lineTo(b.x,b.y);
+        pctx.strokeStyle=`rgba(255,255,255,${0.11-0.0006*d})`;
+        pctx.lineWidth=0.8-0.005*d;
+        pctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+/*--- */
+const vcanvas=document.getElementById('vortex-canvas');
+const vctx=vcanvas.getContext('2d');
+vcanvas.width=W; vcanvas.height=H;
+function vortex(time){
+  vctx.clearRect(0,0,W,H);
+  const t=time*0.0003;
+  for(let i=0;i<180;i++){
+    const a=i*0.11+t*5;
+    const r=150+Math.sin(t*2+i*0.12)*60;
+    const x=W/2+Math.cos(a)*r*Math.sin(t*1.2);
+    const y=H/2+Math.sin(a)*r*Math.cos(t*1.2);
+    vctx.beginPath();
+    vctx.fillStyle=`hsla(${i*8+t*200},80%,60%,0.35)`;
+    vctx.arc(x,y,Math.sin(t*2+i)*3+3,0,Math.PI*2);
+    vctx.fill();
+  }
+  requestAnimationFrame(vortex);
+}
+requestAnimationFrame(vortex);
+
+/* ---  --- */
+const lens=document.getElementById('lens');
+addEventListener('mousemove', e=>{
+  lens.style.transform=`translate(${e.clientX-60}px,${e.clientY-60}px)`;
+});
+
+/* ---  --- */
+const phrases=["DIVS NEVER DIE","REACT IS ETERNAL","EMBRACE CHAOS","JAVASCRIPT WHISPERS","CSS BLEEDS"];
+function spawnPhrase(){
+  const div=document.createElement('div');
+  div.className='subliminal';
+  div.textContent=phrases[Math.floor(Math.random()*phrases.length)];
+  div.style.top=Math.random()*80+"vh";
+  div.style.left=Math.random()*80+"vw";
+  div.style.fontSize=(Math.random()*2+1.2)+"rem";
+  document.body.appendChild(div);
+  setTimeout(()=>div.remove(),6000);
+}
+setInterval(spawnPhrase,2000);
+
+/* ------ */
+const memorial=document.getElementById('memorial');
+function glitchEcho(){
+  const clone=memorial.cloneNode(true);
+  document.body.appendChild(clone);
+  clone.style.position='fixed';
+  clone.style.opacity=0.25;
+  clone.style.transform=`translate(${W/2-200}px,${H/2-80}px) scale(1.2) rotate(${Math.random()*360}deg)`;
+  clone.style.transition='transform 1.2s ease-out, opacity 1.2s ease-out';
+  setTimeout(()=>{
+    clone.style.transform+=` scale(2.2)`;
+    clone.style.opacity=0;
+  },50);
+  setTimeout(()=>clone.remove(),1500);
+}
+setInterval(glitchEcho, 4500);
+</script>
+
+</body>
+</html>
+             
